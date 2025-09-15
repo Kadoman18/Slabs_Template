@@ -23,6 +23,14 @@ const slabBlockComponent = {
 			return;
 		}
 
+		console.warn(
+			`Event:\nBlock: ${
+				block.typeId
+			}\nBlock Face: ${blockFace}\nFace Location: ${faceLocation}\nSelected Item: ${
+				player.getComponent("equippable").getEquipment("Mainhand").typeId
+			}`
+		);
+
 		let wasActionTaken = false;
 
 		//Attempt to get permutation states; handle cases where block may not have these states
@@ -86,7 +94,7 @@ const slabBlockComponent = {
 		}
 
 		// SCENARIO 3: Merging by clicking on the north side of an adjacent block
-		if (!wasActionTaken && blockFace === "north") {
+		if (!wasActionTaken && blockFace === "North") {
 			const northBlock = block.north;
 			if (northBlock) {
 				const verticalHalf = northBlock.permutation.hasState(
@@ -104,7 +112,7 @@ const slabBlockComponent = {
 		}
 
 		// SCENARIO 4: Merging by clicking on the east side of an adjacent block
-		if (!wasActionTaken && blockFace === "east") {
+		if (!wasActionTaken && blockFace === "East") {
 			const eastBlock = block.east;
 			if (eastBlock) {
 				const verticalHalf = eastBlock.permutation.hasState(
@@ -122,7 +130,7 @@ const slabBlockComponent = {
 		}
 
 		// SCENARIO 5: Merging by clicking on the south side of an adjacent block
-		if (!wasActionTaken && blockFace === "south") {
+		if (!wasActionTaken && blockFace === "South") {
 			const southBlock = block.south;
 			if (southBlock) {
 				const verticalHalf = southBlock.permutation.hasState(
@@ -140,7 +148,7 @@ const slabBlockComponent = {
 		}
 
 		// SCENARIO 6: Merging by clicking on the west side of an adjacent block
-		if (!wasActionTaken && blockFace === "west") {
+		if (!wasActionTaken && blockFace === "West") {
 			const westBlock = block.west;
 			if (westBlock) {
 				const verticalHalf = westBlock.permutation.hasState(
