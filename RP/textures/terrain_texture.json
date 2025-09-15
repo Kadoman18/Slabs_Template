@@ -1,0 +1,11 @@
+{
+	"resource_pack_name": "Kadopack v.3.0",
+	"texture_name": "atlas.terrain",
+	"num_mip_levels": 4,
+	"padding": 8,
+	"texture_data": {
+		"andesite_bricks": {
+			"textures": ["textures/blocks/stones/bricks/andesite_bricks"]
+		}
+	}
+}
