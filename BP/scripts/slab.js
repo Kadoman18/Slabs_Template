@@ -1,6 +1,11 @@
 /** @format */
 
-import { system, world } from "@minecraft/server";
+import { system, world, BlockPermutation } from "@minecraft/server";
+
+// Helper to safely modify blocks outside read-only mode
+function safeSetBlock(callback) {
+	system.run(callback);
+}
 
 // Handler for the 'onItemUseOn' event
 const slabBlockComponent = {
@@ -21,6 +26,7 @@ const slabBlockComponent = {
 		if (!selectedItem) {
 			return;
 		}
+
 		let adjacent;
 		switch (blockFace) {
 			case "North":
@@ -45,9 +51,10 @@ const slabBlockComponent = {
 				console.warn(`Brokennnnn`);
 				return;
 		}
-		const adjacentBlock = adjacent.typeId;
+
+		const adjacentBlock = adjacent;
 		console.warn(
-			`\nBlock: ${block.typeId}\nBlock Face: ${blockFace}\nSelected Item: ${selectedItem.typeId}\nAdjacent Block: ${adjacentBlock}`
+			`\nBlock: ${block.typeId}\nBlock Face: ${blockFace}\nSelected Item: ${selectedItem.typeId}\nAdjacent Block: ${adjacentBlock.typeId}`
 		);
 
 		let wasActionTaken = false;
@@ -65,11 +72,13 @@ const slabBlockComponent = {
 				(verticalHalf === "bottom" && blockFace === "Up"));
 
 		if (isMergingOnBlock) {
-			// PROBLEM LINE
-			// system.run maybe?
-			block.setPermutation(block.permutation.withState("kado:double", true));
-			block.setWaterlogged(false);
-			wasActionTaken = true;
+			safeSetBlock(() => {
+				block.setPermutation(
+					block.permutation.withState("kado:double", true)
+				);
+				block.setWaterlogged(false);
+				wasActionTaken = true;
+			});
 		}
 
 		// SCENARIO 2: Merging by clicking on a vertical block's top/bottom face
@@ -81,10 +90,12 @@ const slabBlockComponent = {
 				"top" &&
 			!adjacentBlock.permutation.getState("kado:double")
 		) {
-			adjacentBlock.setPermutation(
-				adjacentBlock.permutation.withState("kado:double", true)
-			);
-			wasActionTaken = true;
+			safeSetBlock(() => {
+				adjacentBlock.setPermutation(
+					adjacentBlock.permutation.withState("kado:double", true)
+				);
+				wasActionTaken = true;
+			});
 		}
 
 		if (
@@ -95,10 +106,12 @@ const slabBlockComponent = {
 				"bottom" &&
 			!adjacentBlock.permutation.getState("kado:double")
 		) {
-			adjacentBlock.setPermutation(
-				adjacentBlock.permutation.withState("kado:double", true)
-			);
-			wasActionTaken = true;
+			safeSetBlock(() => {
+				adjacentBlock.setPermutation(
+					adjacentBlock.permutation.withState("kado:double", true)
+				);
+				wasActionTaken = true;
+			});
 		}
 
 		// SCENARIO 3: Merging by clicking on the side of an adjacent block
@@ -107,10 +120,12 @@ const slabBlockComponent = {
 				"minecraft:vertical_half"
 			);
 			if (verticalHalf && adjacentBlock.typeId === selectedItem.typeId) {
-				adjacentBlock.setPermutation(
-					adjacentBlock.permutation.withState("kado:double", true)
-				);
-				wasActionTaken = true;
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					wasActionTaken = true;
+				});
 			}
 		}
 
@@ -123,26 +138,29 @@ const slabBlockComponent = {
 				} else {
 					newSlabState = faceLocation.y >= 0.5 ? "top" : "bottom";
 				}
-				adjacentBlock.setPermutation(
-					adjacentBlock.permutation
-						.withType(selectedItem.typeId)
-						.withState("minecraft:vertical_half", newSlabState)
-						.withState("kado:double", false)
-				);
-				wasActionTaken = true;
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						BlockPermutation.resolve(selectedItem.typeId)
+							.withState("minecraft:vertical_half", newSlabState)
+							.withState("kado:double", false)
+					);
+					wasActionTaken = true;
+				});
 			}
 		}
 
 		if (wasActionTaken) {
-			if (player.getGameMode() !== "creative") {
-				if (selectedItem.amount > 1) {
-					selectedItem.amount--;
-					equipment.setEquipment("Mainhand", selectedItem);
-				} else if (selectedItem.amount === 1) {
-					equipment.setEquipment("Mainhand", undefined);
+			safeSetBlock(() => {
+				if (player.getGameMode() !== "creative") {
+					if (selectedItem.amount > 1) {
+						selectedItem.amount--;
+						equipment.setEquipment("Mainhand", selectedItem);
+					} else if (selectedItem.amount === 1) {
+						equipment.setEquipment("Mainhand", undefined);
+					}
 				}
-			}
-			player.playSound("use.stone");
+				player.playSound("use.stone");
+			});
 		}
 	},
 
@@ -150,6 +168,7 @@ const slabBlockComponent = {
 		console.warn(`[Slab Behavior] An error occurred: ${error.message}`);
 	},
 };
+
 // --- Subscriptions ---
 system.beforeEvents.startup.subscribe(() => {
 	// Subscribe to the onItemUseOn event for general slab behavior
