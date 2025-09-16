@@ -47,11 +47,7 @@ const slabBlockComponent = {
 		}
 		const adjacentBlock = adjacent;
 		console.warn(
-			`Event:\nBlock: ${
-				block.typeId
-			}\nBlock Face: ${blockFace}\nFace Location: ${faceLocation}\nSelected Item: ${
-				player.getComponent("equippable").getEquipment("Mainhand").typeId
-			}`
+			`Event:\nBlock: ${block.typeId}\nBlock Face: ${blockFace}\nSelected Item: ${selectedItem.typeId}`
 		);
 
 		let wasActionTaken = false;
@@ -76,12 +72,11 @@ const slabBlockComponent = {
 			wasActionTaken = true;
 		}
 
-		// SCENARIO 2: Merging by clicking on an adjacent block's top/bottom face
+		// SCENARIO 2: Merging by clicking on a vertical block's top/bottom face
 		if (
 			!wasActionTaken &&
 			blockFace === "Up" &&
 			adjacentBlock &&
-			adjacentBlock.permutation.hasState("minecraft:vertical_half") &&
 			adjacentBlock.typeId === selectedItem.typeId &&
 			adjacentBlock.permutation.getState("minecraft:vertical_half") ===
 				"top" &&
@@ -97,7 +92,6 @@ const slabBlockComponent = {
 			!wasActionTaken &&
 			blockFace === "Down" &&
 			adjacentBlock &&
-			adjacentBlock.permutation.hasState("minecraft:vertical_half") &&
 			adjacentBlock.typeId === selectedItem.typeId &&
 			adjacentBlock.permutation.getState("minecraft:vertical_half") ===
 				"bottom" &&
@@ -124,8 +118,6 @@ const slabBlockComponent = {
 
 		// Fallback to regular placement logic if no merging occurred
 		if (!wasActionTaken) {
-			// PROBLEM LINE
-			const adjacentBlock = block.getSide(blockFace);
 			if (adjacentBlock && (adjacentBlock.isAir || adjacentBlock.isLiquid)) {
 				let newSlabState;
 				if (blockFace === "Up" || blockFace === "Down") {
