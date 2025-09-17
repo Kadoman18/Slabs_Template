@@ -25,58 +25,113 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 		return;
 	}
 	// Get block adjacent/above/below the interacted block
-	let adjacent;
+	let adjacentBlock;
 	let adjacentSlab;
+	let verticalHalf;
+	let isDoubleSlab;
+	let mergeIndirect;
+	let mergeInteraction;
+	if (
+		block.typeId === selectedItem.typeId &&
+		block.permutation.withState("kado:double", false) &&
+		blockFace === ("Up" || "Down")
+	) {
+		switch (block.permutation?.getState("minecraft:vertical_half")) {
+			case "top":
+				mergeInteraction = blockFace === "Down" ? true : false;
+				break;
+			case "bottom":
+				mergeInteraction = blockFace === "Up" ? true : false;
+				break;
+		}
+	}
 	switch (blockFace) {
 		case "North":
-			adjacent = block.north(1);
+			adjacentBlock = block.north(1);
+			mergeIndirect =
+				adjacentBlock.typeId === selectedItem.typeId ? true : false;
+			if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+				});
+			}
 			break;
 		case "East":
-			adjacent = block.east(1);
+			adjacentBlock = block.east(1);
+			mergeIndirect =
+				adjacentBlock.typeId === selectedItem.typeId ? true : false;
+			if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+				});
+			}
 			break;
 		case "South":
-			adjacent = block.south(1);
+			adjacentBlock = block.south(1);
+			mergeIndirect =
+				adjacentBlock.typeId === selectedItem.typeId ? true : false;
+			if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+				});
+			}
 			break;
 		case "West":
-			adjacent = block.west(1);
+			adjacentBlock = block.west(1);
+			mergeIndirect =
+				adjacentBlock.typeId === selectedItem.typeId ? true : false;
+			if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+				});
+			}
 			break;
 		case "Up":
-			adjacent = block.above(1);
+			adjacentBlock = block.above(1);
+			mergeIndirect =
+				adjacentBlock.typeId === selectedItem.typeId ? true : false;
+			if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+				});
+			} else if (mergeInteraction === true) {
+				safeSetBlock(() => {
+					block.setPermutation(
+						block.permutation.withState("kado:double", true)
+					);
+				});
+			}
 			break;
 		case "Down":
-			adjacent = block.below(1);
+			adjacentBlock = block.below(1);
+			mergeIndirect =
+				adjacentBlock.typeId === selectedItem.typeId ? true : false;
+			if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+				});
+			} else if (mergeInteraction === true) {
+				safeSetBlock(() => {
+					block.setPermutation(
+						block.permutation.withState("kado:double", true)
+					);
+				});
+			}
 			break;
 		default:
 			console.warn(`Brokennnnn`);
 			return;
-	}
-	const adjacentBlock = adjacent;
-	if (
-		adjacentBlock.permutation?.getState("minecraft:vertical_half") &&
-		adjacentBlock.typeId === selectedItem.typeId
-	) {
-		adjacentSlab = true;
-	} else {
-		adjacentSlab = false;
-	}
-	const verticalHalf = block.permutation?.getState("minecraft:vertical_half");
-	const isDoubleSlab = block.permutation?.getState("kado:double");
-	// REMOVE LATER - Debugging Purposes
-	if (verticalHalf) {
-		console.warn(
-			`\nBlock: ${block.typeId}\nDouble Slab: ${isDoubleSlab}\nBlock Face: ${blockFace}\nSelected Item: ${selectedItem.typeId}\nAdjacent Block: ${adjacentBlock.typeId}\nVertical Half: ${verticalHalf}\nAdjacent Slab: ${adjacentSlab}`
-		);
-		// console.warn(`VERTICAL HALF`);
-	} else {
-		console.warn(
-			`\nBlock: ${block.typeId}\nBlock Face: ${blockFace}\nSelected Item: ${selectedItem.typeId}\nAdjacent Block: ${adjacentBlock.typeId}\nAdjacent Slab: ${adjacentSlab}`
-		);
-		// console.warn(`NO VERTICAL HALF`);
-	}
-	if (blockFace === ("Up" || "Down") && adjacentSlab) {
-		safeSetBlock(() => {
-			adjacentBlock.setPermutation;
-			adjacentBlock.permutation.withState("kado:double", true);
-		});
 	}
 });
