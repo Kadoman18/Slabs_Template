@@ -26,9 +26,6 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 	}
 	// Get block adjacent/above/below the interacted block
 	let adjacentBlock;
-	let adjacentSlab;
-	let verticalHalf;
-	let isDoubleSlab;
 	let mergeIndirect;
 	let mergeInteraction;
 	if (
@@ -43,6 +40,9 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 			case "bottom":
 				mergeInteraction = blockFace === "Up" ? true : false;
 				break;
+			default:
+				console.warn(`Brokennnnn`);
+				return;
 		}
 	}
 	switch (blockFace) {
