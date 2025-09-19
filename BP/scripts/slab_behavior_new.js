@@ -7,38 +7,33 @@ function safeSetBlock(callback) {
 	system.run(callback);
 }
 
-// Subscribe to playerInteractWithBlock event to detect if a player interacts with a block
 world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
-	const { block, player, blockFace, faceLocation, itemStack } = event;
-
-	// Exit early if the block is invalid or the item is not a slab
-	if (!block || !itemStack || !itemStack.typeId.includes("slab")) {
-		return;
-	}
+	const { block, player, blockFace } = event;
 
 	const equipment = player.getComponent("equippable");
-	if (!equipment) {
-		return;
-	}
+	if (!equipment) return;
+
 	const selectedItem = equipment.getEquipment("Mainhand");
-	if (!selectedItem) {
-		return;
-	}
-	// Get block adjacent/above/below the interacted block
+	if (!selectedItem || !selectedItem.typeId.includes("kado")) return;
+
 	let adjacentBlock;
 	let mergeIndirect;
 	let mergeInteraction;
+	let furtherBlock;
+	let furtherBlockPerms;
 	if (
 		block.typeId === selectedItem.typeId &&
 		block.permutation.withState("kado:double", false) &&
-		blockFace === ("Up" || "Down")
+		(blockFace === "Up" || blockFace === "Down")
 	) {
 		switch (block.permutation?.getState("minecraft:vertical_half")) {
 			case "top":
 				mergeInteraction = blockFace === "Down" ? true : false;
+				// console.warn(`BLOCKFACE: ${blockFace}\nMERGE: ${mergeInteraction}`);
 				break;
 			case "bottom":
 				mergeInteraction = blockFace === "Up" ? true : false;
+				// console.warn(`BLOCKFACE: ${blockFace}\nMERGE: ${mergeInteraction}`);
 				break;
 			default:
 				console.warn(`Brokennnnn`);
@@ -55,6 +50,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 					adjacentBlock.setPermutation(
 						adjacentBlock.permutation.withState("kado:double", true)
 					);
+					player.playSound("use.stone");
 				});
 			}
 			break;
@@ -67,6 +63,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 					adjacentBlock.setPermutation(
 						adjacentBlock.permutation.withState("kado:double", true)
 					);
+					player.playSound("use.stone");
 				});
 			}
 			break;
@@ -79,6 +76,7 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 					adjacentBlock.setPermutation(
 						adjacentBlock.permutation.withState("kado:double", true)
 					);
+					player.playSound("use.stone");
 				});
 			}
 			break;
@@ -91,42 +89,63 @@ world.beforeEvents.playerInteractWithBlock.subscribe((event) => {
 					adjacentBlock.setPermutation(
 						adjacentBlock.permutation.withState("kado:double", true)
 					);
+					player.playSound("use.stone");
 				});
 			}
 			break;
 		case "Up":
 			adjacentBlock = block.above(1);
+			furtherBlock = block.above(2);
+			furtherBlockPerms = furtherBlock.permutation?.getAllStates();
+
 			mergeIndirect =
 				adjacentBlock.typeId === selectedItem.typeId ? true : false;
-			if (mergeIndirect === true) {
-				safeSetBlock(() => {
-					adjacentBlock.setPermutation(
-						adjacentBlock.permutation.withState("kado:double", true)
-					);
-				});
-			} else if (mergeInteraction === true) {
+			if (mergeInteraction === true) {
 				safeSetBlock(() => {
 					block.setPermutation(
 						block.permutation.withState("kado:double", true)
 					);
+					if (furtherBlockPerms) {
+						furtherBlock.setPermutation(
+							furtherBlock.permutation.withState(furtherBlockPerms, true)
+						);
+					}
+					player.playSound("use.stone");
+				});
+			} else if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
 				});
 			}
 			break;
 		case "Down":
 			adjacentBlock = block.below(1);
+			furtherBlock = block.below(2);
+			furtherBlockPerms = furtherBlock.permutation?.getAllStates();
+
 			mergeIndirect =
 				adjacentBlock.typeId === selectedItem.typeId ? true : false;
-			if (mergeIndirect === true) {
-				safeSetBlock(() => {
-					adjacentBlock.setPermutation(
-						adjacentBlock.permutation.withState("kado:double", true)
-					);
-				});
-			} else if (mergeInteraction === true) {
+			if (mergeInteraction === true) {
 				safeSetBlock(() => {
 					block.setPermutation(
 						block.permutation.withState("kado:double", true)
 					);
+					if (furtherBlockPerms) {
+						furtherBlock.setPermutation(
+							furtherBlock.permutation.withState(furtherBlockPerms, true)
+						);
+					}
+					player.playSound("use.stone");
+				});
+			} else if (mergeIndirect === true) {
+				safeSetBlock(() => {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
 				});
 			}
 			break;
