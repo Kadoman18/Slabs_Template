@@ -18,6 +18,8 @@
 			}
 		},
 		"components": {
+			"kado:slab": {},
+			"tag:kado:slab": {},
 			"minecraft:material_instances": {
 				"*": {
 					"texture": "andesite_bricks"

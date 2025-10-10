@@ -1,2 +1,3 @@
 import "./slab_behavior.js";
-console.warn(`Slabs Script Loaded`)
+system.run(() =>
+		world.sendMessage(`Slabs Script Loaded`)

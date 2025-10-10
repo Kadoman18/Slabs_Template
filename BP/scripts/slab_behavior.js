@@ -1,159 +1,138 @@
 /** @format */
 
-import { system, world } from "@minecraft/server";
+import { system } from "@minecraft/server";
 
-// Handler for the 'onItemUseOn' event
 const slabBlockComponent = {
-	onItemUseOn(event) {
-		// Destructure event data for easier access
-		const { block, player, blockFace, faceLocation, itemStack } = event;
+	beforeOnPlayerPlace(event) {
+		const { block, player } = event;
+		const head = player.getHeadLocation();
+		const target = player.dimension.getBlockFromRay(
+			{ ...head, y: head.y + 0.1 },
+			player.getViewDirection()
+		);
 
-		// Exit early if the block is invalid or the item is not a slab
-		if (!block || !itemStack || !itemStack.typeId.includes("slab")) {
-			return;
+		const item = player
+			.getComponent("minecraft:inventory")
+			.container.getItem(player.selectedSlotIndex);
+		let adjacentBlock;
+		let mergeIndirect;
+		let mergeInteraction;
+		if (
+			block.typeId === item.typeId &&
+			block.permutation?.getState("kado:double") &&
+			(face === "Up" || face === "Down")
+		) {
+			switch (block.permutation?.getState("minecraft:vertical_half")) {
+				case "top":
+					mergeInteraction = face === "Down" ? true : false;
+					console.warn(
+						`BLOCKFACE: ${face} ~~~ SLAB: ${block.permutation?.getState(
+							"minecraft:vertical_half"
+						)}\nMERGE: ${mergeInteraction}`
+					);
+					break;
+				case "bottom":
+					mergeInteraction = face === "Up" ? true : false;
+					console.warn(
+						`BLOCKFACE: ${face} ~~~ SLAB: ${block.permutation?.getState(
+							"minecraft:vertical_half"
+						)}\nMERGE: ${mergeInteraction}`
+					);
+					break;
+				default:
+					console.warn(`Brokennnnn UP DOWN SECTION`);
+					return;
+			}
 		}
-
-		const equipment = player.getComponent("equippable");
-		if (!equipment) {
-			return;
-		}
-		const selectedItem = equipment.getEquipment("Mainhand");
-		if (!selectedItem) {
-			return;
-		}
-		let adjacent;
-		switch (blockFace) {
+		switch (face) {
 			case "North":
-				adjacent = block.north(1);
+				adjacentBlock = block.north(1);
+				mergeIndirect = adjacentBlock.typeId === item.typeId ? true : false;
+				if (mergeIndirect === true) {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				}
+				console.warn(
+					`BLOCKFACE: ${face}\nMERGE-INDIRECT: ${mergeInteraction} ~~~ Adjacent block: ${adjacentBlock.typeId}`
+				);
 				break;
 			case "East":
-				adjacent = block.east(1);
+				adjacentBlock = block.east(1);
+				mergeIndirect = adjacentBlock.typeId === item.typeId ? true : false;
+				if (mergeIndirect === true) {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				}
 				break;
 			case "South":
-				adjacent = block.south(1);
+				adjacentBlock = block.south(1);
+				mergeIndirect = adjacentBlock.typeId === item.typeId ? true : false;
+				if (mergeIndirect === true) {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				}
 				break;
 			case "West":
-				adjacent = block.west(1);
+				adjacentBlock = block.west(1);
+				mergeIndirect = adjacentBlock.typeId === item.typeId ? true : false;
+				if (mergeIndirect === true) {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				}
 				break;
 			case "Up":
-				adjacent = block.above(1);
+				adjacentBlock = block.above(1);
+				mergeIndirect = adjacentBlock.typeId === item.typeId ? true : false;
+				if (mergeInteraction === true) {
+					event.cancel = true;
+					block.setPermutation(
+						block.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				} else if (mergeIndirect === true) {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				}
 				break;
 			case "Down":
-				adjacent = block.below(1);
+				adjacentBlock = block.below(1);
+				mergeIndirect = adjacentBlock.typeId === item.typeId ? true : false;
+				if (mergeInteraction === true) {
+					event.cancel = true;
+					block.setPermutation(
+						block.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				} else if (mergeIndirect === true) {
+					adjacentBlock.setPermutation(
+						adjacentBlock.permutation.withState("kado:double", true)
+					);
+					player.playSound("use.stone");
+				}
 				break;
 			default:
-				console.warn(`Brokennnnn`);
+				console.warn(`Brokennnnn SWITCH SECTION\n
+					BLOCKFACE: ${face} ~~~ SLAB: ${block.permutation?.getState(
+					"minecraft:vertical_half"
+				)}\nMERGE: ${mergeInteraction}`);
 				return;
 		}
-		const adjacentBlock = adjacent.typeId;
-		console.warn(
-			`\nBlock: ${block.typeId}\nBlock Face: ${blockFace}\nSelected Item: ${selectedItem.typeId}\nAdjacent Block: ${adjacentBlock}`
-		);
-
-		let wasActionTaken = false;
-
-		// SCENARIO 1: Merging by clicking on the slab block itself
-		const verticalHalf = block.permutation?.getState(
-			"minecraft:vertical_half"
-		);
-		const isDoubleSlab = block.permutation?.getState("kado:double");
-
-		const isMergingOnBlock =
-			selectedItem.typeId === block.typeId &&
-			!isDoubleSlab &&
-			((verticalHalf === "top" && blockFace === "Down") ||
-				(verticalHalf === "bottom" && blockFace === "Up"));
-
-		if (isMergingOnBlock) {
-			// PROBLEM LINE
-			// system.run maybe?
-			block.setPermutation(block.permutation.withState("kado:double", true));
-			block.setWaterlogged(false);
-			wasActionTaken = true;
-		}
-
-		// SCENARIO 2: Merging by clicking on a vertical block's top/bottom face
-		if (
-			!wasActionTaken &&
-			blockFace === "Up" &&
-			adjacentBlock.typeId === selectedItem.typeId &&
-			adjacentBlock.permutation?.getState("minecraft:vertical_half") ===
-				"top" &&
-			!adjacentBlock.permutation.getState("kado:double")
-		) {
-			adjacentBlock.setPermutation(
-				adjacentBlock.permutation.withState("kado:double", true)
-			);
-			wasActionTaken = true;
-		}
-
-		if (
-			!wasActionTaken &&
-			blockFace === "Down" &&
-			adjacentBlock.typeId === selectedItem.typeId &&
-			adjacentBlock.permutation?.getState("minecraft:vertical_half") ===
-				"bottom" &&
-			!adjacentBlock.permutation.getState("kado:double")
-		) {
-			adjacentBlock.setPermutation(
-				adjacentBlock.permutation.withState("kado:double", true)
-			);
-			wasActionTaken = true;
-		}
-
-		// SCENARIO 3: Merging by clicking on the side of an adjacent block
-		if (!wasActionTaken && adjacentBlock) {
-			const verticalHalf = adjacentBlock.permutation?.getState(
-				"minecraft:vertical_half"
-			);
-			if (verticalHalf && adjacentBlock.typeId === selectedItem.typeId) {
-				adjacentBlock.setPermutation(
-					adjacentBlock.permutation.withState("kado:double", true)
-				);
-				wasActionTaken = true;
-			}
-		}
-
-		// Fallback to regular placement logic if no merging occurred
-		if (!wasActionTaken) {
-			if (adjacentBlock.isAir || adjacentBlock.isLiquid) {
-				let newSlabState;
-				if (blockFace === "Up" || blockFace === "Down") {
-					newSlabState = blockFace === "Up" ? "bottom" : "top";
-				} else {
-					newSlabState = faceLocation.y >= 0.5 ? "top" : "bottom";
-				}
-				adjacentBlock.setPermutation(
-					adjacentBlock.permutation
-						.withType(selectedItem.typeId)
-						.withState("minecraft:vertical_half", newSlabState)
-						.withState("kado:double", false)
-				);
-				wasActionTaken = true;
-			}
-		}
-
-		if (wasActionTaken) {
-			if (player.getGameMode() !== "creative") {
-				if (selectedItem.amount > 1) {
-					selectedItem.amount--;
-					equipment.setEquipment("Mainhand", selectedItem);
-				} else if (selectedItem.amount === 1) {
-					equipment.setEquipment("Mainhand", undefined);
-				}
-			}
-			player.playSound("use.stone");
-		}
-	},
-
-	catch(error) {
-		console.warn(`[Slab Behavior] An error occurred: ${error.message}`);
 	},
 };
-// --- Subscriptions ---
-system.beforeEvents.startup.subscribe(() => {
-	// Subscribe to the onItemUseOn event for general slab behavior
-	world.beforeEvents.playerInteractWithBlock.subscribe((event) =>
-		slabBlockComponent.onItemUseOn(event)
+
+system.beforeEvents.startup.subscribe(({ blockComponentRegistry }) => {
+	blockComponentRegistry.registerCustomComponent(
+		"kado:slab",
+		slabBlockComponent
 	);
 });
