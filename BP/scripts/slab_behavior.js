@@ -1,4 +1,4 @@
-import { system } from "@minecraft/server";
+import { world, system, ItemStack } from "@minecraft/server";
 
 const slabBlockComponent = {
 	// FOR REGULAR MERGING
@@ -46,6 +46,14 @@ const slabBlockComponent = {
 					adjacentBlock.permutation.withState("kado:double", true)
 				)
 			);
+			if (player.getGameMode() !== "Creative") {
+				const slot = player
+					.getComponent("inventory")
+					.container.getSlot(player.selectedSlotIndex);
+				const newSlabAmount = new ItemStack(item.typeId, item.amount - 1);
+
+				system.run(() => slot.setItem(newSlabAmount));
+			}
 		}
 	},
 };
