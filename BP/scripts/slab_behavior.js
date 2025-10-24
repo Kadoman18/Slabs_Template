@@ -4,43 +4,48 @@ const slabBlockComponent = {
 	// FOR REGULAR MERGING
 	beforeOnPlayerPlace(placeEvent) {
 		const { block, player, face } = placeEvent;
+		if (face !== "Up" && face !== "Down") return;
 		const item = player
 			.getComponent("minecraft:inventory")
 			.container.getItem(player.selectedSlotIndex);
 		let adjacentBlock;
+		let mergeInteraction;
 		switch (face) {
 			case "Up": {
-				placeEvent.cancel = true;
 				adjacentBlock = block.below(1);
-				if (
-					adjacentBlock.typeId === item.typeId &&
-					face === "Down" &&
-					adjacentBlock.permutation?.getState("kado:double")
-				) {
-					console.warn(
-						`Slab Type: ${block.permutation?.getState(
-							"minecraft:vertical_half"
-						)}\nFace: DOWN\nBlock: ${adjacentBlock}`
-					);
-				}
+				mergeInteraction =
+					adjacentBlock.permutation?.getState(
+						"minecraft:vertical_half"
+					) === "top"
+						? false
+						: true;
 				break;
 			}
 			case "Down": {
 				adjacentBlock = block.above(1);
-				placeEvent.cancel = true;
-				if (
-					adjacentBlock.typeId === item.typeId &&
-					face === "Up" &&
-					adjacentBlock.permutation?.getState("kado:double")
-				) {
-					console.warn(
-						`Slab Type: ${block.permutation?.getState(
-							"minecraft:vertical_half"
-						)}\nFace: UP\nBlock: ${adjacentBlock}`
-					);
-				}
+				mergeInteraction =
+					adjacentBlock.permutation?.getState(
+						"minecraft:vertical_half"
+					) === "bottom"
+						? false
+						: true;
 				break;
 			}
+		}
+		if (
+			adjacentBlock.typeId === item.typeId &&
+			adjacentBlock.permutation?.getState("kado:double") === false &&
+			mergeInteraction === true
+		) {
+			placeEvent.cancel = true;
+			system.run(() =>
+				player.playSound("use.stone", adjacentBlock.location)
+			);
+			system.run(() =>
+				adjacentBlock.setPermutation(
+					adjacentBlock.permutation.withState("kado:double", true)
+				)
+			);
 		}
 	},
 };
